@@ -78,12 +78,30 @@ function set_busy_for(milliseconds: number): void {
 
 const save_power = false;
 
-if (save_power) {
-    // 2 is the lowest brightness. Anything lower turns off the lights.
-    led.setBrightness(2);
-} else {
-    led.setBrightness(0xff);
+function set_screen_brightness(): void {
+    if (save_power) {
+        // 2 is the lowest brightness. Anything lower turns off the lights.
+        led.setBrightness(2);
+    } else {
+        led.setBrightness(0xff);
+    }
 }
+
+function apply_sound_volume(): void {
+    music.setVolume(((sound_volume / 10) * 2) * 0xff);
+}
+
+function show_volume(): void {
+    for (let x = 0; x <= 4; x += 1)
+        led.plotBrightness(x, 2, 2)
+    led.plotBrightness(sound_volume, 2, 0xff)
+}
+
+let sound_volume = 4;
+apply_sound_volume();
+
+led.setDisplayMode(DisplayMode.BlackAndWhite)
+set_screen_brightness();
 bluetooth.startUartService();
 show_any_face();
 
@@ -101,21 +119,89 @@ bluetooth.onUartDataReceived(delimiter, () => {
     basic.showString(char, 0);
 });
 
+let adjust_sound_volume = false;
 input.onButtonPressed(Button.A, function () {
+    if (!busy) {
+        menu = false;
+        adjust_sound_volume = false;
+    }
+    if (menu) {
+        set_busy_for(5000);
+        if (adjust_sound_volume) {
+            if (sound_volume !== 0)
+                sound_volume -= 1;
+        } else {
+            adjust_sound_volume = true;
+        }
+        show_volume();
+        apply_sound_volume();
+        music.playTone(Note.C, 100);
+
+        return;
+    }
+
     set_busy_for(5000);
     show_face(direction_left);
 });
 input.onButtonPressed(Button.AB, function () {
+    if (!busy) {
+        menu = false;
+        adjust_sound_volume = false;
+    }
+    if (menu) {
+        set_busy_for(5000);
+        return;
+    }
+
     set_busy_for(5000);
     show_face(direction_front);
+
+    busy = true;
+    basic.clearScreen();
+    let offset = -4;
+    while (offset <= 4) {
+        for (let y = 0; y <= 4; y += 1) {
+            for (let x = 0; x <= 4; x += 1) {
+                led.plotBrightness(x, offset + y, ((4 - y) * 63) + 3);
+            }
+            const notes = [Note.A, Note.B, Note.C, Note.D, Note.E, Note.F, Note.G, Note.CSharp3];
+            if (offset == 3 && sound_volume !== 0) music.setVolume(0xff);
+            music.playTone(notes[offset + 4], 10)
+            if (offset == 3 && sound_volume !== 0) apply_sound_volume();
+        }
+        offset += 1;
+        control.waitMicros(100000);
+    }
+    basic.clearScreen();
+    busy = false;
 });
 input.onButtonPressed(Button.B, function () {
+    if (!busy) {
+        menu = false;
+        adjust_sound_volume = false;
+    }
+    if (menu) {
+        set_busy_for(5000);
+        if (adjust_sound_volume) {
+            if (sound_volume !== 4)
+                sound_volume += 1;
+            show_volume();
+            apply_sound_volume();
+            music.playTone(Note.A, 100);
+        }
+        return;
+    }
+
     set_busy_for(5000);
     show_face(direction_right);
 });
+
+let menu = false;
 input.onLogoEvent(TouchButtonEvent.Pressed, function() {
-    set_busy_for(5000);
-    while (true) {
+    menu = !menu;
+    if (menu) {
+        set_busy_for(5000);
+        // "Awaiting input..."
         basic.showLeds(`
             . . . . .
             . . . . .
@@ -123,22 +209,9 @@ input.onLogoEvent(TouchButtonEvent.Pressed, function() {
             . . . . .
             . . . . .
         `);
-        if (!busy) return;
-        basic.showLeds(`
-            . . . . .
-            . . . . .
-            . # . # .
-            . . . . .
-            . . . . .
-        `);
-        if (!busy) return;
-        if (input.buttonIsPressed(Button.A)) {
-
-        } else if (input.buttonIsPressed(Button.B)) {
-
-        }
     }
 });
 
 input.onGesture(Gesture.FreeFall, function() {
+    music.playMelody("A D E G A B", 20);
 })
