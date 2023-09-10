@@ -32,7 +32,6 @@ function show_face(direction: number): void {
             break;
     }
 }
-
 function show_any_face(): void {
     show_face(randint(0, 2));
 }
@@ -60,7 +59,7 @@ control.setInterval(() => {
     if (busy) return;
     basic.showString(phrase[0], 100);
     if (busy) return;
-    basic.showString(phrase.slice(1), 100);
+    basic.showString(phrase.slice(1), 125);
     if (busy) return;
 
     show_any_face();
@@ -68,6 +67,7 @@ control.setInterval(() => {
 
 let busy = false;
 let busy_timeout: number;
+// Prevents the robot from going idle for this long.
 function set_busy_for(milliseconds: number): void {
     busy = true;
     control.clearInterval(busy_timeout, control.IntervalMode.Timeout);
@@ -76,8 +76,14 @@ function set_busy_for(milliseconds: number): void {
     }, milliseconds, control.IntervalMode.Timeout);
 }
 
-// 2 is the lowest brightness. Anything lower turns off the lights.
-led.setBrightness(2);
+const save_power = false;
+
+if (save_power) {
+    // 2 is the lowest brightness. Anything lower turns off the lights.
+    led.setBrightness(2);
+} else {
+    led.setBrightness(0xff);
+}
 bluetooth.startUartService();
 show_any_face();
 
@@ -107,4 +113,32 @@ input.onButtonPressed(Button.B, function () {
     set_busy_for(5000);
     show_face(direction_right);
 });
+input.onLogoEvent(TouchButtonEvent.Pressed, function() {
+    set_busy_for(5000);
+    while (true) {
+        basic.showLeds(`
+            . . . . .
+            . . . . .
+            # . # . #
+            . . . . .
+            . . . . .
+        `);
+        if (!busy) return;
+        basic.showLeds(`
+            . . . . .
+            . . . . .
+            . # . # .
+            . . . . .
+            . . . . .
+        `);
+        if (!busy) return;
+        if (input.buttonIsPressed(Button.A)) {
 
+        } else if (input.buttonIsPressed(Button.B)) {
+
+        }
+    }
+});
+
+input.onGesture(Gesture.FreeFall, function() {
+})
