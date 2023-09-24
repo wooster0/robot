@@ -29,7 +29,6 @@ It's one of the few apps that I was consistently able to connect to my micro:bit
 
 # Use a low-level language like Zig, C/C++, or Rust?
 
-Nope, this time in this project I'm saving myself from all this headache and just doing it the easy way and having fun by doing it like everyone else: Microsoft MakeCode with blocks, JavaScript, or Python (JavaScript for this project).
+Nope, this time in this project I'm saving myself from all this headache and just doing it the easy way and having fun by doing it like everyone else: Microsoft MakeCode with blocks, JavaScript/TypeScript, or Python (TypeScript for this project).
 
 The micro:bit runtime (<https://lancaster-university.github.io/microbit-docs/>) similarly comes with its own difficulties.
- 
